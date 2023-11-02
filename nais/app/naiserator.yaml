@@ -1,0 +1,60 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: flex-innsending-vedlegg
+  namespace: flex
+  labels:
+    team: flex
+spec:
+  gcp:
+    buckets:
+      - name: {{gcp_bucket}}
+        publicAccessPrevention: true
+  image: {{ image }}
+  replicas:
+    min: {{replicas_min}}
+    max: {{replicas_max}}
+    cpuThresholdPercentage: 90
+  port: 8080
+  liveness:
+    path: /internal/health/liveness
+  readiness:
+    path: /internal/health/readiness
+  startup:
+    path: /internal/health/liveness
+    initialDelay: 40
+  prometheus:
+    enabled: true
+    path: /internal/prometheus
+  resources:
+    limits:
+      memory: {{memory}}
+    requests:
+      cpu: {{cpu}}
+      memory: {{memory}}
+  azure:
+    application:
+      enabled: true
+  tokenx:
+    enabled: true
+  accessPolicy:
+    outbound:
+      external:
+        - host: www.googleapis.com
+        - host: storage.googleapis.com
+        - host: oauth2.googleapis.com
+    inbound:
+      rules:
+        - application: sykepengesoknad-backend
+        - application: sykepengesoknad
+        - application: sykepengesoknad-arkivering-oppgave
+        {{#if flex-openapi-docs-ui}}
+        - application: flex-openapi-docs-ui
+        {{/if}}
+  env:
+    - name: BUCKET_NAME
+      value: {{gcp_bucket}}
+  {{#each env}}
+    - name: {{@key}}
+      value: "{{this}}"
+  {{/each}}

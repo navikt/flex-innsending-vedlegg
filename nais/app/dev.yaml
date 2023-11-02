@@ -1,0 +1,11 @@
+environment: dev
+replicas_min: 1
+replicas_max: 1
+cpu: 100m
+memory: 400Mi
+gcp_bucket: flex-flex-innsending-vedlegg-dev
+flex-openapi-docs-ui: true
+env:
+  SPRING_PROFILES_ACTIVE: default
+  SYKEPENGESOKNAD_FRONTEND_CLIENT_ID: dev-gcp:flex:sykepengesoknad
+  SYKEPENGESOKNAD_BACKEND_CLIENT_ID: dev-gcp:flex:sykepengesoknad-backend

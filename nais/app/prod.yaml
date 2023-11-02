@@ -1,0 +1,10 @@
+environment: prod
+replicas_min: 2
+replicas_max: 3
+cpu: 200m
+memory: 800Mi
+gcp_bucket: flex-flex-innsending-vedlegg-prod
+env:
+  SPRING_PROFILES_ACTIVE: default
+  SYKEPENGESOKNAD_FRONTEND_CLIENT_ID: prod-gcp:flex:sykepengesoknad
+  SYKEPENGESOKNAD_BACKEND_CLIENT_ID: prod-gcp:flex:sykepengesoknad-backend
