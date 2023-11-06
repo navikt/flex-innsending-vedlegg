@@ -17,25 +17,25 @@ import java.util.*
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 internal class MaskinApiTest : FellesTestOppsett() {
 
-    private lateinit var kvitteringId: String
+    private lateinit var vedleggId: String
 
     @Autowired
     private lateinit var bucketKlient: BucketKlient
 
     @BeforeAll
-    fun lagreKvittering() {
-        kvitteringId = UUID.randomUUID().toString()
+    fun lagreVedlegg() {
+        vedleggId = UUID.randomUUID().toString()
         val bilde = hentTestbilde("1200x800.jpeg")
-        bucketKlient.lagreBlob(kvitteringId, bilde.contentType, mapOf("fnr" to "fnr-1"), bilde.bytes)
+        bucketKlient.lagreBlob(vedleggId, bilde.contentType, mapOf("fnr" to "fnr-1"), bilde.bytes)
     }
 
     @Test
     @Order(1)
-    fun `Hent kvittering`() {
+    fun `Hent vedlegg`() {
         val azureToken = azureToken(subject = "sykepengesoknad-backend-client-id")
 
         val response = mockMvc.perform(
-            get("/maskin/kvittering/$kvitteringId")
+            get("/maskin/vedlegg/$vedleggId")
                 .header("Authorization", "Bearer $azureToken")
         ).andExpect(status().isOk).andReturn().response
 
@@ -44,22 +44,22 @@ internal class MaskinApiTest : FellesTestOppsett() {
 
     @Test
     @Order(2)
-    fun `Hent kvittering med ukjent clientId`() {
+    fun `Hent vedlegg med ukjent clientId`() {
         val azureToken = azureToken(subject = "ukjent-client-id")
 
         mockMvc.perform(
-            get("/maskin/kvittering/$kvitteringId")
+            get("/maskin/vedlegg/$vedleggId")
                 .header("Authorization", "Bearer $azureToken")
         ).andExpect(status().isForbidden)
     }
 
     @Test
     @Order(3)
-    fun `Hent kvittering som ikke finnes`() {
+    fun `Hent vedlegg som ikke finnes`() {
         val azureToken = azureToken(subject = "sykepengesoknad-backend-client-id")
 
         mockMvc.perform(
-            get("/maskin/kvittering/ukjent-kvittering")
+            get("/maskin/vedlegg/ukjent-vedlegg")
                 .header("Authorization", "Bearer $azureToken")
         ).andExpect(status().isNotFound)
     }

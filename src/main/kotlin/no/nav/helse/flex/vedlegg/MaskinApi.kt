@@ -1,9 +1,9 @@
-package no.nav.helse.flex.no.nav.helse.flex.api
+package no.nav.helse.flex.no.nav.helse.flex.vedlegg
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.swagger.v3.oas.annotations.Hidden
-import no.nav.helse.flex.kvittering.Kvitteringer
 import no.nav.helse.flex.objectMapper
+import no.nav.helse.flex.vedlegg.VedleggService
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import org.springframework.beans.factory.annotation.Value
@@ -20,21 +20,21 @@ class MaskinApi(
     @Value("\${AZURE_APP_PRE_AUTHORIZED_APPS}")
     private val azurePreAuthorizedApps: String,
     private val tokenValidationContextHolder: TokenValidationContextHolder,
-    private val kvitteringer: Kvitteringer
+    private val vedleggService: VedleggService
 ) {
 
     private val allowedClients: List<PreAuthorizedClient> = objectMapper.readValue(azurePreAuthorizedApps)
 
-    @GetMapping("/maskin/kvittering/{blobNavn}")
+    @GetMapping("/maskin/vedlegg/{blobNavn}")
     @ProtectedWithClaims(issuer = "azureator")
     @ResponseBody
-    fun hentKvittering(@PathVariable blobNavn: String): ResponseEntity<ByteArray> {
+    fun hentVedlegg(@PathVariable blobNavn: String): ResponseEntity<ByteArray> {
         validateClientId(validClients())
-        val kvittering = kvitteringer.hentKvittering(blobNavn) ?: return ResponseEntity.notFound().build()
+        val vedlegg = vedleggService.hentVedleggg(blobNavn) ?: return ResponseEntity.notFound().build()
         return ResponseEntity
             .ok()
-            .contentType(MediaType.parseMediaType(kvittering.contentType))
-            .body(kvittering.bytes)
+            .contentType(MediaType.parseMediaType(vedlegg.contentType))
+            .body(vedlegg.bytes)
     }
 
     private fun validClients() = listOf(

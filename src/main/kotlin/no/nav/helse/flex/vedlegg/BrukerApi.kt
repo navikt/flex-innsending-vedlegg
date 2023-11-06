@@ -1,11 +1,11 @@
-package no.nav.helse.flex.no.nav.helse.flex.api
+package no.nav.helse.flex.no.nav.helse.flex.vedlegg
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.helse.flex.AbstractApiError
 import no.nav.helse.flex.LogLevel
-import no.nav.helse.flex.kvittering.Kvittering
-import no.nav.helse.flex.kvittering.Kvitteringer
+import no.nav.helse.flex.vedlegg.Vedlegg
+import no.nav.helse.flex.vedlegg.VedleggService
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import no.nav.security.token.support.core.jwt.JwtTokenClaims
@@ -19,10 +19,10 @@ import org.springframework.web.multipart.MultipartFile
 import java.util.*
 
 @Controller
-@Tag(name = "kvitteringer", description = "Operasjoner for å laste opp reisetilskudd kvitteringer")
+@Tag(name = "vedlegg", description = "Operasjoner for å laste opp vedlegg")
 class BrukerApi(
     private val tokenValidationContextHolder: TokenValidationContextHolder,
-    private val kvitteringer: Kvitteringer,
+    private val vedleggService: VedleggService,
 
     @Value("\${SYKEPENGESOKNAD_FRONTEND_CLIENT_ID}")
     val sykepengesoknadFrontendClientId: String,
@@ -31,57 +31,57 @@ class BrukerApi(
     val sykepengesoknadBackendClientId: String
 ) {
 
-    @PostMapping("/api/v2/opplasting")
+    @PostMapping("/api/v2/vedlegg")
     @ProtectedWithClaims(issuer = "tokenx", combineWithOr = true, claimMap = ["acr=Level4", "acr=idporten-loa-high"])
     @ResponseBody
-    fun lagreKvittering(@RequestParam("file") file: MultipartFile): ResponseEntity<VedleggRespons> {
+    fun lagreVedlegg(@RequestParam("file") file: MultipartFile): ResponseEntity<VedleggRespons> {
         val id = UUID.randomUUID().toString()
         val fnr = validerTokenXClaims(sykepengesoknadFrontendClientId).hentFnr()
 
-        kvitteringer.lagreKvittering(fnr, id, MediaType.parseMediaType(file.contentType!!), file.bytes)
-        return ResponseEntity.status(HttpStatus.CREATED).body(VedleggRespons(id, "Lagret kvittering med id: $id."))
+        vedleggService.lagreVedlegg(fnr, id, MediaType.parseMediaType(file.contentType!!), file.bytes)
+        return ResponseEntity.status(HttpStatus.CREATED).body(VedleggRespons(id, "Lagret vedlegg med id: $id."))
     }
 
-    @GetMapping("/api/v2/kvittering/{blobNavn}")
-    @Operation(description = "Hent kvittering")
+    @GetMapping("/api/v2/vedlegg/{blobNavn}")
+    @Operation(description = "Hent vedlegg")
     @ProtectedWithClaims(issuer = "tokenx", combineWithOr = true, claimMap = ["acr=Level4", "acr=idporten-loa-high"])
-    fun hentKvittering(@PathVariable blobNavn: String): ResponseEntity<ByteArray> {
+    fun hentVedlegg(@PathVariable blobNavn: String): ResponseEntity<ByteArray> {
         if (blobNavn.matches("^[a-zA-Z0-9-]+$".toRegex())) {
             val fnr = validerTokenXClaims(sykepengesoknadFrontendClientId).hentFnr()
 
-            val kvittering = kvitteringer.hentKvittering(blobNavn) ?: return ResponseEntity.notFound().build()
+            val vedlegg = vedleggService.hentVedleggg(blobNavn) ?: return ResponseEntity.notFound().build()
 
-            if (!kvitteringEiesAvBruker(kvittering, fnr)) {
-                throw UkjentClientException("Kvittering $blobNavn er forsøkt hentet av feil bruker.")
+            if (!vedleggEiesAvBruker(vedlegg, fnr)) {
+                throw UkjentClientException("Vedlegg $blobNavn er forsøkt hentet av feil bruker.")
             }
 
             return ResponseEntity
                 .ok()
-                .contentType(MediaType.parseMediaType(kvittering.contentType))
-                .body(kvittering.bytes)
+                .contentType(MediaType.parseMediaType(vedlegg.contentType))
+                .body(vedlegg.bytes)
         }
         throw IllegalArgumentException("blobNavn validerer ikke")
     }
 
-    @DeleteMapping("/api/v2/kvittering/{blobNavn}")
+    @DeleteMapping("/api/v2/vedlegg/{blobNavn}")
     @ResponseBody
     @ProtectedWithClaims(issuer = "tokenx", combineWithOr = true, claimMap = ["acr=Level4", "acr=idporten-loa-high"])
-    fun slettKvittering(@PathVariable blobNavn: String): ResponseEntity<Any> {
+    fun slettVedlegg(@PathVariable blobNavn: String): ResponseEntity<Any> {
         if (blobNavn.matches("^[a-zA-Z0-9-]+$".toRegex())) {
             val fnr = validerTokenXClaims(sykepengesoknadBackendClientId).hentFnr()
-            val kvittering = kvitteringer.hentKvittering(blobNavn) ?: return ResponseEntity.noContent().build()
+            val vedlegg = vedleggService.hentVedleggg(blobNavn) ?: return ResponseEntity.noContent().build()
 
-            if (!kvitteringEiesAvBruker(kvittering, fnr)) {
-                throw UkjentClientException("Kvittering $blobNavn er forsøkt slettet av feil bruker.")
+            if (!vedleggEiesAvBruker(vedlegg, fnr)) {
+                throw UkjentClientException("Vedlegg $blobNavn er forsøkt slettet av feil bruker.")
             }
-            kvitteringer.slettKvittering(blobNavn)
+            vedleggService.slettVedlegg(blobNavn)
             return ResponseEntity.noContent().build()
         }
         throw IllegalArgumentException("blobNavn validerer ikke")
     }
 
-    private fun kvitteringEiesAvBruker(kvittering: Kvittering, fnr: String): Boolean {
-        return fnr == kvittering.fnr
+    private fun vedleggEiesAvBruker(vedlegg: Vedlegg, fnr: String): Boolean {
+        return fnr == vedlegg.fnr
     }
 
     private fun JwtTokenClaims.hentFnr(): String {

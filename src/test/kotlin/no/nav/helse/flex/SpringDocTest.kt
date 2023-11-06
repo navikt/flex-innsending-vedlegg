@@ -14,6 +14,6 @@ class SpringDocTest : FellesTestOppsett() {
             .andExpect(MockMvcResultMatchers.status().isOk).andReturn().response.contentAsString
 
         response.shouldContain("OpenAPI definition")
-        response.shouldContain("lagreKvittering")
+        response.shouldContain("lagreVedlegg")
     }
 }

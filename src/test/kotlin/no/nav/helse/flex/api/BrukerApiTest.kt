@@ -2,7 +2,7 @@ package no.nav.helse.flex.api
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.helse.flex.FellesTestOppsett
-import no.nav.helse.flex.no.nav.helse.flex.api.VedleggRespons
+import no.nav.helse.flex.no.nav.helse.flex.vedlegg.VedleggRespons
 import no.nav.helse.flex.objectMapper
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldNotBeNullOrEmpty
@@ -20,16 +20,16 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 internal class BrukerApiTest : FellesTestOppsett() {
 
-    private lateinit var kvitteringId: String
+    private lateinit var vedleggId: String
 
     @Test
     @Order(1)
-    fun `Last opp kvittering som bruker`() {
+    fun `Last opp vedlegg som bruker`() {
         val bilde = hentTestbilde("1200x800.jpeg")
         val multipartFile = MockMultipartFile("file", null, bilde.contentType.toString(), bilde.bytes)
 
         val response = mockMvc.perform(
-            multipart("/api/v2/opplasting")
+            multipart("/api/v2/vedlegg")
                 .file(multipartFile)
                 .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
         ).andExpect(status().isCreated).andReturn().response
@@ -37,7 +37,7 @@ internal class BrukerApiTest : FellesTestOppsett() {
         val vedleggRespons: VedleggRespons = objectMapper.readValue(response.contentAsString)
         vedleggRespons.id.shouldNotBeNullOrEmpty()
 
-        kvitteringId = vedleggRespons.id!!
+        vedleggId = vedleggRespons.id!!
     }
 
     @Test
@@ -47,7 +47,7 @@ internal class BrukerApiTest : FellesTestOppsett() {
         val multipartFile = MockMultipartFile("file", null, bilde.contentType.toString(), bilde.bytes)
 
         mockMvc.perform(
-            multipart("/api/v2/opplasting")
+            multipart("/api/v2/vedlegg")
                 .file(multipartFile)
                 .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
         ).andExpect(status().isInternalServerError)
@@ -55,9 +55,9 @@ internal class BrukerApiTest : FellesTestOppsett() {
 
     @Test
     @Order(2)
-    fun `Hent kvittering som bruker`() {
+    fun `Hent vedlegg som bruker`() {
         val response = mockMvc.perform(
-            get("/api/v2/kvittering/$kvitteringId")
+            get("/api/v2/vedlegg/$vedleggId")
                 .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
         ).andExpect(status().isOk).andReturn().response
 
@@ -66,18 +66,18 @@ internal class BrukerApiTest : FellesTestOppsett() {
 
     @Test
     @Order(3)
-    fun `Hent kvittering med feil bruker`() {
+    fun `Hent vedlegg med feil bruker`() {
         mockMvc.perform(
-            get("/api/v2/kvittering/$kvitteringId")
+            get("/api/v2/vedlegg/$vedleggId")
                 .header("Authorization", "Bearer ${tokenxToken("fnr-2")}")
         ).andExpect(status().isForbidden)
     }
 
     @Test
     @Order(4)
-    fun `Slett kvittering med feil bruker`() {
+    fun `Slett vedlegg med feil bruker`() {
         mockMvc.perform(
-            delete("/api/v2/kvittering/$kvitteringId")
+            delete("/api/v2/vedlegg/$vedleggId")
                 .header(
                     "Authorization",
                     "Bearer ${tokenxToken(fnr = "fnr-2", clientId = "sykepengesoknad-backend-client-id")}"
@@ -87,9 +87,9 @@ internal class BrukerApiTest : FellesTestOppsett() {
 
     @Test
     @Order(5)
-    fun `Slett kvittering`() {
+    fun `Slett vedlegg`() {
         mockMvc.perform(
-            delete("/api/v2/kvittering/$kvitteringId")
+            delete("/api/v2/vedlegg/$vedleggId")
                 .header(
                     "Authorization",
                     "Bearer ${tokenxToken(fnr = "fnr-1", clientId = "sykepengesoknad-backend-client-id")}"
@@ -99,18 +99,18 @@ internal class BrukerApiTest : FellesTestOppsett() {
 
     @Test
     @Order(6)
-    fun `Hent slettet kvittering som bruker`() {
+    fun `Hent slettet vedlegg som bruker`() {
         mockMvc.perform(
-            get("/api/v2/kvittering/$kvitteringId")
+            get("/api/v2/vedlegg/$vedleggId")
                 .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
         ).andExpect(status().isNotFound)
     }
 
     @Test
     @Order(5)
-    fun `Slett allerede slettet kvittering`() {
+    fun `Slett allerede slettet vedlegg`() {
         mockMvc.perform(
-            delete("/api/v2/kvittering/$kvitteringId")
+            delete("/api/v2/vedlegg/$vedleggId")
                 .header(
                     "Authorization",
                     "Bearer ${tokenxToken(fnr = "fnr-1", clientId = "sykepengesoknad-backend-client-id")}"
