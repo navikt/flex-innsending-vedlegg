@@ -3,7 +3,11 @@ package no.nav.helse.flex.api
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.helse.flex.FellesTestOppsett
 import no.nav.helse.flex.no.nav.helse.flex.vedlegg.VedleggRespons
+import no.nav.helse.flex.no.nav.helse.flex.virusscan.Result
+import no.nav.helse.flex.no.nav.helse.flex.virusscan.ScanResult
 import no.nav.helse.flex.objectMapper
+import no.nav.helse.flex.serialisertTilString
+import okhttp3.mockwebserver.MockResponse
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldNotBeNullOrEmpty
 import org.junit.jupiter.api.MethodOrderer
@@ -116,5 +120,23 @@ internal class BrukerApiTest : FellesTestOppsett() {
                     "Bearer ${tokenxToken(fnr = "fnr-1", clientId = "sykepengesoknad-backend-client-id")}"
                 )
         ).andExpect(status().isNoContent)
+    }
+
+    @Test
+    @Order(6)
+    fun `Clam AV sier virus`() {
+        val bilde = hentTestbilde("1200x800.jpeg")
+        val multipartFile = MockMultipartFile("file", null, bilde.contentType.toString(), bilde.bytes)
+
+        clamAvMockDispatcher.enqueue(
+            MockResponse().setBody(
+                listOf(ScanResult("test", Result.FOUND)).serialisertTilString()
+            ).addHeader("Content-Type", "application/json")
+        )
+        mockMvc.perform(
+            multipart("/api/v1/vedlegg")
+                .file(multipartFile)
+                .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
+        ).andExpect(status().isBadRequest)
     }
 }
