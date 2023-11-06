@@ -105,6 +105,6 @@ class VirusFunnetException : AbstractApiError(
 class IkkeStøttetMediatypeException(mediaType: MediaType) : AbstractApiError(
     "ikke støttet mediatype: $mediaType",
     HttpStatus.BAD_REQUEST,
-    "FEIL_MEDIATYPE",
+    "USTØTTET_MEDIATYPE",
     LogLevel.ERROR
 )

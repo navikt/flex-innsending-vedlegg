@@ -1,6 +1,7 @@
 package no.nav.helse.flex.api
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import no.nav.helse.flex.ApiError
 import no.nav.helse.flex.FellesTestOppsett
 import no.nav.helse.flex.no.nav.helse.flex.vedlegg.VedleggRespons
 import no.nav.helse.flex.no.nav.helse.flex.virusscan.Result
@@ -10,16 +11,20 @@ import no.nav.helse.flex.serialisertTilString
 import okhttp3.mockwebserver.MockResponse
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldNotBeNullOrEmpty
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.pdmodel.PDPage
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
+import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.io.ByteArrayOutputStream
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 internal class BrukerApiTest : FellesTestOppsett() {
@@ -137,6 +142,80 @@ internal class BrukerApiTest : FellesTestOppsett() {
             multipart("/api/v1/vedlegg")
                 .file(multipartFile)
                 .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
-        ).andExpect(status().isBadRequest)
+        ).andExpect(status().isBadRequest).tilReason() `should be equal to` "VIRUS_FUNNET"
+    }
+
+    @Test
+    @Order(7)
+    fun `Ustøttet contenttype`() {
+        val multipartFile = MockMultipartFile("file", null, MediaType.APPLICATION_ATOM_XML.toString(), ByteArray(0))
+
+        mockMvc.perform(
+            multipart("/api/v1/vedlegg")
+                .file(multipartFile)
+                .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
+        ).andExpect(status().isBadRequest).tilReason() `should be equal to` "USTØTTET_MEDIATYPE"
+    }
+
+    @Test
+    @Order(8)
+    fun `Ugyldig PDF`() {
+        val multipartFile = MockMultipartFile("file", null, MediaType.APPLICATION_PDF.toString(), ByteArray(0))
+
+        mockMvc.perform(
+            multipart("/api/v1/vedlegg")
+                .file(multipartFile)
+                .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
+        ).andExpect(status().isBadRequest).tilReason() `should be equal to` "UGYLDIG_PDF"
+    }
+
+    @Test
+    @Order(9)
+    fun `Tom PDF`() {
+        fun createEmptyPdfByteArray(): ByteArray {
+            PDDocument().use { document ->
+                ByteArrayOutputStream().use { outputStream ->
+                    document.save(outputStream)
+                    return outputStream.toByteArray()
+                }
+            }
+        }
+
+        val multipartFile =
+            MockMultipartFile("file", null, MediaType.APPLICATION_PDF.toString(), createEmptyPdfByteArray())
+
+        mockMvc.perform(
+            multipart("/api/v1/vedlegg")
+                .file(multipartFile)
+                .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
+        ).andExpect(status().isBadRequest).tilReason() `should be equal to` "TOM_PDF"
+    }
+
+    @Test
+    @Order(10)
+    fun `Laster opp PDF med en side`() {
+        fun createEmptyPdfByteArray(): ByteArray {
+            PDDocument().use { document ->
+                document.addPage(PDPage())
+                ByteArrayOutputStream().use { outputStream ->
+                    document.save(outputStream)
+                    return outputStream.toByteArray()
+                }
+            }
+        }
+
+        val multipartFile =
+            MockMultipartFile("file", null, MediaType.APPLICATION_PDF.toString(), createEmptyPdfByteArray())
+
+        mockMvc.perform(
+            multipart("/api/v1/vedlegg")
+                .file(multipartFile)
+                .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
+        ).andExpect(status().isCreated)
+    }
+
+    fun ResultActions.tilReason(): String {
+        val response: ApiError = objectMapper.readValue(this.andReturn().response.contentAsString)
+        return response.reason
     }
 }

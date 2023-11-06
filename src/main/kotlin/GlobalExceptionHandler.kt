@@ -3,12 +3,15 @@ package no.nav.helse.flex
 import jakarta.servlet.http.HttpServletRequest
 import no.nav.security.token.support.core.exceptions.JwtTokenInvalidClaimException
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.HttpMediaTypeNotAcceptableException
 import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+import java.nio.charset.StandardCharsets
 
 @ControllerAdvice
 class GlobalExceptionHandler {
@@ -26,7 +29,7 @@ class GlobalExceptionHandler {
                     }
                 }
 
-                ResponseEntity(ApiError(exception.reason), exception.httpStatus)
+                ResponseEntity(ApiError(exception.reason), httpHeaders(), exception.httpStatus)
             }
             is JwtTokenInvalidClaimException -> skapResponseEntity(HttpStatus.UNAUTHORIZED)
             is JwtTokenUnauthorizedException -> skapResponseEntity(HttpStatus.UNAUTHORIZED)
@@ -40,10 +43,15 @@ class GlobalExceptionHandler {
     }
 
     private fun skapResponseEntity(status: HttpStatus): ResponseEntity<Any> =
-        ResponseEntity(ApiError(status.reasonPhrase), status)
-
-    private data class ApiError(val reason: String)
+        ResponseEntity(ApiError(status.reasonPhrase), httpHeaders(), status)
 }
+
+fun httpHeaders(): HttpHeaders {
+    val headers = HttpHeaders()
+    headers.contentType = MediaType("application", "json", StandardCharsets.UTF_8)
+    return headers
+}
+data class ApiError(val reason: String)
 
 abstract class AbstractApiError(
     message: String,
