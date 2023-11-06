@@ -31,7 +31,7 @@ class BrukerApi(
     val sykepengesoknadBackendClientId: String
 ) {
 
-    @PostMapping("/api/v2/vedlegg")
+    @PostMapping("/api/v1/vedlegg")
     @ProtectedWithClaims(issuer = "tokenx", combineWithOr = true, claimMap = ["acr=Level4", "acr=idporten-loa-high"])
     @ResponseBody
     fun lagreVedlegg(@RequestParam("file") file: MultipartFile): ResponseEntity<VedleggRespons> {
@@ -42,7 +42,7 @@ class BrukerApi(
         return ResponseEntity.status(HttpStatus.CREATED).body(VedleggRespons(id, "Lagret vedlegg med id: $id."))
     }
 
-    @GetMapping("/api/v2/vedlegg/{blobNavn}")
+    @GetMapping("/api/v1/vedlegg/{blobNavn}")
     @Operation(description = "Hent vedlegg")
     @ProtectedWithClaims(issuer = "tokenx", combineWithOr = true, claimMap = ["acr=Level4", "acr=idporten-loa-high"])
     fun hentVedlegg(@PathVariable blobNavn: String): ResponseEntity<ByteArray> {
@@ -63,7 +63,7 @@ class BrukerApi(
         throw IllegalArgumentException("blobNavn validerer ikke")
     }
 
-    @DeleteMapping("/api/v2/vedlegg/{blobNavn}")
+    @DeleteMapping("/api/v1/vedlegg/{blobNavn}")
     @ResponseBody
     @ProtectedWithClaims(issuer = "tokenx", combineWithOr = true, claimMap = ["acr=Level4", "acr=idporten-loa-high"])
     fun slettVedlegg(@PathVariable blobNavn: String): ResponseEntity<Any> {

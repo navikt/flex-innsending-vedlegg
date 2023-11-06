@@ -29,7 +29,7 @@ internal class BrukerApiTest : FellesTestOppsett() {
         val multipartFile = MockMultipartFile("file", null, bilde.contentType.toString(), bilde.bytes)
 
         val response = mockMvc.perform(
-            multipart("/api/v2/vedlegg")
+            multipart("/api/v1/vedlegg")
                 .file(multipartFile)
                 .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
         ).andExpect(status().isCreated).andReturn().response
@@ -47,7 +47,7 @@ internal class BrukerApiTest : FellesTestOppsett() {
         val multipartFile = MockMultipartFile("file", null, bilde.contentType.toString(), bilde.bytes)
 
         mockMvc.perform(
-            multipart("/api/v2/vedlegg")
+            multipart("/api/v1/vedlegg")
                 .file(multipartFile)
                 .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
         ).andExpect(status().isInternalServerError)
@@ -57,7 +57,7 @@ internal class BrukerApiTest : FellesTestOppsett() {
     @Order(2)
     fun `Hent vedlegg som bruker`() {
         val response = mockMvc.perform(
-            get("/api/v2/vedlegg/$vedleggId")
+            get("/api/v1/vedlegg/$vedleggId")
                 .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
         ).andExpect(status().isOk).andReturn().response
 
@@ -68,7 +68,7 @@ internal class BrukerApiTest : FellesTestOppsett() {
     @Order(3)
     fun `Hent vedlegg med feil bruker`() {
         mockMvc.perform(
-            get("/api/v2/vedlegg/$vedleggId")
+            get("/api/v1/vedlegg/$vedleggId")
                 .header("Authorization", "Bearer ${tokenxToken("fnr-2")}")
         ).andExpect(status().isForbidden)
     }
@@ -77,7 +77,7 @@ internal class BrukerApiTest : FellesTestOppsett() {
     @Order(4)
     fun `Slett vedlegg med feil bruker`() {
         mockMvc.perform(
-            delete("/api/v2/vedlegg/$vedleggId")
+            delete("/api/v1/vedlegg/$vedleggId")
                 .header(
                     "Authorization",
                     "Bearer ${tokenxToken(fnr = "fnr-2", clientId = "sykepengesoknad-backend-client-id")}"
@@ -89,7 +89,7 @@ internal class BrukerApiTest : FellesTestOppsett() {
     @Order(5)
     fun `Slett vedlegg`() {
         mockMvc.perform(
-            delete("/api/v2/vedlegg/$vedleggId")
+            delete("/api/v1/vedlegg/$vedleggId")
                 .header(
                     "Authorization",
                     "Bearer ${tokenxToken(fnr = "fnr-1", clientId = "sykepengesoknad-backend-client-id")}"
@@ -101,7 +101,7 @@ internal class BrukerApiTest : FellesTestOppsett() {
     @Order(6)
     fun `Hent slettet vedlegg som bruker`() {
         mockMvc.perform(
-            get("/api/v2/vedlegg/$vedleggId")
+            get("/api/v1/vedlegg/$vedleggId")
                 .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
         ).andExpect(status().isNotFound)
     }
@@ -110,7 +110,7 @@ internal class BrukerApiTest : FellesTestOppsett() {
     @Order(5)
     fun `Slett allerede slettet vedlegg`() {
         mockMvc.perform(
-            delete("/api/v2/vedlegg/$vedleggId")
+            delete("/api/v1/vedlegg/$vedleggId")
                 .header(
                     "Authorization",
                     "Bearer ${tokenxToken(fnr = "fnr-1", clientId = "sykepengesoknad-backend-client-id")}"
