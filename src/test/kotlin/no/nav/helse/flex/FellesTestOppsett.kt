@@ -1,9 +1,11 @@
 package no.nav.helse.flex
 
+import no.nav.helse.flex.mockdispatcher.ClamAvMockDispatcher
 import no.nav.helse.flex.no.nav.helse.flex.bildeprosessering.Bilde
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import okhttp3.mockwebserver.MockWebServer
 import org.apache.tika.Tika
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,13 +19,11 @@ import java.util.*
 
 private const val TESTBILDER = "src/test/resources/bilder/"
 
-const val PROSESSERT_BILDE_BYTE_SIZE = 4028
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @EnableMockOAuth2Server
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class FellesTestOppsett() {
+abstract class FellesTestOppsett {
 
     val tika = Tika()
 
@@ -32,6 +32,18 @@ abstract class FellesTestOppsett() {
 
     @Autowired
     lateinit var mockOAuth2Server: MockOAuth2Server
+
+    companion object {
+        val clamAvMockDispatcher: MockWebServer
+
+        init {
+
+            clamAvMockDispatcher = MockWebServer().apply {
+                System.setProperty("CLAM_AV_URL", "http://localhost:$port")
+                dispatcher = ClamAvMockDispatcher
+            }
+        }
+    }
 
     fun hentTestbilde(filnavn: String): Bilde {
         val bytes = Files.readAllBytes(Paths.get("$TESTBILDER/$filnavn"))

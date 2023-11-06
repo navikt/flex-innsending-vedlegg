@@ -1,32 +1,64 @@
 package no.nav.helse.flex.vedlegg
 
+import no.nav.helse.flex.AbstractApiError
+import no.nav.helse.flex.LogLevel
 import no.nav.helse.flex.logger
 import no.nav.helse.flex.no.nav.helse.flex.bildeprosessering.Bilde
 import no.nav.helse.flex.no.nav.helse.flex.bildeprosessering.Bildeprosessering
 import no.nav.helse.flex.no.nav.helse.flex.bucket.BucketKlient
 import no.nav.helse.flex.no.nav.helse.flex.bucket.BucketKlient.BlobContent
+import no.nav.helse.flex.no.nav.helse.flex.virusscan.Result
+import no.nav.helse.flex.no.nav.helse.flex.virusscan.VirusScan
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class VedleggService(
     private val bucketKlient: BucketKlient,
-    private val bildeprosessering: Bildeprosessering
+    private val bildeprosessering: Bildeprosessering,
+    private val virusScan: VirusScan
 ) {
 
     private val log = logger()
 
-    fun lagreVedlegg(fnr: String, blobNavn: String, mediaType: MediaType, blobContent: ByteArray) {
-        val prosessertBilde = bildeprosessering.prosesserBilde(Bilde(mediaType, blobContent))
+    fun lagreVedlegg(fnr: String, id: String = UUID.randomUUID().toString(), mediaType: MediaType, blobContent: ByteArray): String {
+        virusScan.scanForVirus(blobContent).let {
+            if (it.any { scanResult -> scanResult.getResult() == Result.FOUND }) {
+                throw VirusFunnetException()
+            }
+        }
+
+        data class BlobContent(val contentType: MediaType, val bytes: ByteArray)
+
+        val filTilOpplasting = when (mediaType) {
+            MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG -> {
+                val prosesserBilde = bildeprosessering.prosesserBilde(
+                    Bilde(
+                        mediaType,
+                        blobContent
+                    )
+                )
+                BlobContent(prosesserBilde.contentType, prosesserBilde.bytes)
+            }
+
+            MediaType.APPLICATION_PDF -> {
+                BlobContent(mediaType, blobContent)
+            }
+
+            else -> throw IkkeStøttetMediatypeException(mediaType)
+        }
 
         bucketKlient.lagreBlob(
-            blobNavn = blobNavn,
-            contentType = prosessertBilde!!.contentType,
+            blobNavn = id,
+            contentType = filTilOpplasting.contentType,
             metadata = mapOf("fnr" to fnr),
-            bytes = prosessertBilde.bytes
+            bytes = filTilOpplasting.bytes
         )
 
-        log.info("Lagret vedlegg med blobNavn: $blobNavn og mediaType: $mediaType.")
+        log.info("Lagret vedlegg med blobNavn: $id og mediaType: ${filTilOpplasting.contentType}.")
+        return id
     }
 
     fun hentVedleggg(blobNavn: String): Vedlegg? {
@@ -59,4 +91,18 @@ class Vedlegg(
     val bytes: ByteArray,
     val contentType: String,
     val contentSize: Long = bytes.size.toLong()
+)
+
+class VirusFunnetException : AbstractApiError(
+    "Virus funnet i vedlegg",
+    HttpStatus.BAD_REQUEST,
+    "VIRUS_FUNNET",
+    LogLevel.ERROR
+)
+
+class IkkeStøttetMediatypeException(mediaType: MediaType) : AbstractApiError(
+    "ikke støttet mediatype: $mediaType",
+    HttpStatus.BAD_REQUEST,
+    "FEIL_MEDIATYPE",
+    LogLevel.ERROR
 )

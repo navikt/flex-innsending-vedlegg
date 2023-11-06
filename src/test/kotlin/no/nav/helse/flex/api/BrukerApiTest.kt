@@ -50,7 +50,7 @@ internal class BrukerApiTest : FellesTestOppsett() {
             multipart("/api/v1/vedlegg")
                 .file(multipartFile)
                 .header("Authorization", "Bearer ${tokenxToken("fnr-1")}")
-        ).andExpect(status().isInternalServerError)
+        ).andExpect(status().isBadRequest)
     }
 
     @Test

@@ -10,3 +10,4 @@ env:
   SPRING_PROFILES_ACTIVE: default
   SYKEPENGESOKNAD_FRONTEND_CLIENT_ID: dev-gcp:flex:sykepengesoknad
   SYKEPENGESOKNAD_BACKEND_CLIENT_ID: dev-gcp:flex:sykepengesoknad-backend
+  CLAM_AV_URL: http://clamav.nais-system.svc.cluster.local

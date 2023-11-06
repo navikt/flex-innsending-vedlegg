@@ -16,7 +16,7 @@ class Bildeprosessering {
 
     private val gyldigeBildetyper = listOf(MediaType.IMAGE_PNG, MediaType.IMAGE_JPEG)
 
-    fun prosesserBilde(bilde: Bilde): Bilde? {
+    fun prosesserBilde(bilde: Bilde): Bilde {
         if (!gyldigeBildetyper.contains(bilde.contentType)) {
             throw IllegalArgumentException(
                 "Kan ikke prosessere bilde av typen ${bilde.contentType}. " +

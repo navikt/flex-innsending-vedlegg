@@ -35,10 +35,13 @@ class BrukerApi(
     @ProtectedWithClaims(issuer = "tokenx", combineWithOr = true, claimMap = ["acr=Level4", "acr=idporten-loa-high"])
     @ResponseBody
     fun lagreVedlegg(@RequestParam("file") file: MultipartFile): ResponseEntity<VedleggRespons> {
-        val id = UUID.randomUUID().toString()
         val fnr = validerTokenXClaims(sykepengesoknadFrontendClientId).hentFnr()
 
-        vedleggService.lagreVedlegg(fnr, id, MediaType.parseMediaType(file.contentType!!), file.bytes)
+        val id = vedleggService.lagreVedlegg(
+            fnr = fnr,
+            mediaType = MediaType.parseMediaType(file.contentType!!),
+            blobContent = file.bytes
+        )
         return ResponseEntity.status(HttpStatus.CREATED).body(VedleggRespons(id, "Lagret vedlegg med id: $id."))
     }
 

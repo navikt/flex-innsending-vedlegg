@@ -3,27 +3,29 @@ package no.nav.helse.flex.no.nav.helse.flex.virusscan
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 
 @Component
 class VirusScan(
-
+    @Value("\${CLAM_AV_URL}")
+    private val clamAvUrl: String,
     private val virusScanRestTemplate: RestTemplate
 ) {
 
-    fun scanForVirus(bytes: ByteArray): Array<ScanResult>? {
+    fun scanForVirus(bytes: ByteArray): Array<ScanResult> {
         val result = virusScanRestTemplate
             .exchange(
-                "http://clamav.nais-system.svc.cluster.local" + "/scan",
+                "$clamAvUrl/scan",
                 org.springframework.http.HttpMethod.PUT,
                 HttpEntity(
                     bytes
                 ),
                 Array<ScanResult>::class.java
             )
-        return result.body
+        return result.body ?: throw RuntimeException("Kall mot virus scan returnerer ikke data")
     }
 }
 
