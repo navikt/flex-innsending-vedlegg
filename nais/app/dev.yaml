@@ -5,6 +5,7 @@ cpu: 100m
 memory: 400Mi
 gcp_bucket: flex--innsending-vedlegg-dev
 flex-openapi-docs-ui: true
+dev-ingress: true
 env:
   SPRING_PROFILES_ACTIVE: default
   SYKEPENGESOKNAD_FRONTEND_CLIENT_ID: dev-gcp:flex:sykepengesoknad
