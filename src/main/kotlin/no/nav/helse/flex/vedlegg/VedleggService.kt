@@ -7,6 +7,7 @@ import no.nav.helse.flex.no.nav.helse.flex.bildeprosessering.Bilde
 import no.nav.helse.flex.no.nav.helse.flex.bildeprosessering.Bildeprosessering
 import no.nav.helse.flex.no.nav.helse.flex.bucket.BucketKlient
 import no.nav.helse.flex.no.nav.helse.flex.bucket.BucketKlient.BlobContent
+import no.nav.helse.flex.no.nav.helse.flex.pdfvalidering.sjekkGyldigPdf
 import no.nav.helse.flex.no.nav.helse.flex.virusscan.Result
 import no.nav.helse.flex.no.nav.helse.flex.virusscan.VirusScan
 import org.springframework.http.HttpStatus
@@ -44,6 +45,7 @@ class VedleggService(
             }
 
             MediaType.APPLICATION_PDF -> {
+                blobContent.sjekkGyldigPdf()
                 BlobContent(mediaType, blobContent)
             }
 
