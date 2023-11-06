@@ -37,10 +37,6 @@ spec:
       enabled: true
   tokenx:
     enabled: true
-  {{#if dev-ingress}}
-  ingresses:
-    - https://flex-vedlegg.intern.dev.nav.no
-  {{/if}}
   accessPolicy:
     outbound:
       external:
