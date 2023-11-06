@@ -43,6 +43,9 @@ spec:
         - host: www.googleapis.com
         - host: storage.googleapis.com
         - host: oauth2.googleapis.com
+      rules:
+        - application: clamav
+          namespace: nais-system
     inbound:
       rules:
         - application: sykepengesoknad-backend
