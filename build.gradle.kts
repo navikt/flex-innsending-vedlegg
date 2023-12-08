@@ -51,7 +51,7 @@ dependencies {
     implementation("com.google.cloud:google-cloud-storage:$googleCloudVersion")
     implementation("org.apache.pdfbox:pdfbox:3.0.1")
 
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.awaitility:awaitility")
