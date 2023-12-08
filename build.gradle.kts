@@ -49,7 +49,7 @@ dependencies {
     implementation("no.nav.security:token-validation-spring:$tokenSupportVersion")
     implementation("no.nav.security:token-client-spring:$tokenSupportVersion")
     implementation("com.google.cloud:google-cloud-storage:$googleCloudVersion")
-    implementation("org.apache.pdfbox:pdfbox:3.0.0")
+    implementation("org.apache.pdfbox:pdfbox:3.0.1")
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
