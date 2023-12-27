@@ -10,6 +10,7 @@ spec:
     buckets:
       - name: {{gcp_bucket}}
         publicAccessPrevention: true
+        cascadingDelete: true
   image: {{ image }}
   replicas:
     min: {{replicas_min}}
